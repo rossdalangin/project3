@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string
  */
 function ross_get_project_type( $post_id = 0 ) {
-	$post_id = $post_id ? $post_id : get_the_ID();
+	$post_id = $post_id ? (int) $post_id : (int) get_the_ID();
 	if ( ! $post_id ) {
 		return '';
 	}
@@ -30,7 +30,7 @@ function ross_get_project_type( $post_id = 0 ) {
  * @return string
  */
 function ross_get_project_summary( $post_id = 0 ) {
-	$post_id = $post_id ? $post_id : get_the_ID();
+	$post_id = $post_id ? (int) $post_id : (int) get_the_ID();
 	if ( ! $post_id ) {
 		return '';
 	}
@@ -44,7 +44,7 @@ function ross_get_project_summary( $post_id = 0 ) {
  * @return string
  */
 function ross_get_project_solution( $post_id = 0 ) {
-	$post_id = $post_id ? $post_id : get_the_ID();
+	$post_id = $post_id ? (int) $post_id : (int) get_the_ID();
 	if ( ! $post_id ) {
 		return '';
 	}
@@ -58,7 +58,7 @@ function ross_get_project_solution( $post_id = 0 ) {
  * @return bool
  */
 function ross_is_project_featured( $post_id = 0 ) {
-	$post_id = $post_id ? $post_id : get_the_ID();
+	$post_id = $post_id ? (int) $post_id : (int) get_the_ID();
 	if ( ! $post_id ) {
 		return false;
 	}
@@ -74,9 +74,9 @@ function ross_is_project_featured( $post_id = 0 ) {
  */
 function ross_user_has_access( $user = null ) {
 	if ( null === $user ) {
-		$user_id = get_current_user_id();
-	} elseif ( $user instanceof WP_User ) {
-		$user_id = $user->ID;
+		$user_id = (int) get_current_user_id();
+	} elseif ( is_object( $user ) && isset( $user->ID ) ) {
+		$user_id = (int) $user->ID;
 	} else {
 		$user_id = (int) $user;
 	}

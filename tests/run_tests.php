@@ -5,14 +5,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $wp_options = array();
-$wp_roles = (object) array(
-	'roles' => array(
+
+class Mock_WP_Roles {
+	public $roles = array(
 		'administrator' => array( 'name' => 'Administrator' ),
 		'editor'        => array( 'name' => 'Editor' ),
 		'author'        => array( 'name' => 'Author' ),
 		'subscriber'    => array( 'name' => 'Subscriber' ),
-	),
-);
+	);
+	public function get_names() {
+		return array(
+			'administrator' => 'Administrator',
+			'editor'        => 'Editor',
+			'author'        => 'Author',
+			'subscriber'    => 'Subscriber',
+		);
+	}
+}
+
+$wp_roles = new Mock_WP_Roles();
 
 class Mock_Role {
 	public $key;
@@ -37,8 +48,8 @@ $mock_roles_objs = array(
 
 function plugin_dir_path( $file ) { return dirname(__DIR__) . '/'; }
 function plugin_dir_url( $file ) { return 'http://localhost/wp-content/plugins/ross-portfolio/'; }
-function add_action( $hook, $cb ) {}
-function add_filter( $hook, $cb ) {}
+function add_action( $hook, $cb, $priority = 10, $accepted_args = 1 ) {}
+function add_filter( $hook, $cb, $priority = 10, $accepted_args = 1 ) {}
 function register_activation_hook( $file, $cb ) {}
 function register_deactivation_hook( $file, $cb ) {}
 function __( $str, $domain = '' ) { return $str; }

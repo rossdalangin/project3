@@ -70,6 +70,10 @@ final class Ross_Portfolio_Core {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'template_redirect', array( $this, 'handle_template_redirect' ) );
 		add_filter( 'the_content', array( $this, 'filter_content' ) );
+		add_filter( 'the_excerpt', array( $this, 'filter_excerpt' ) );
+		add_filter( 'the_content_feed', array( $this, 'filter_feed' ) );
+		add_filter( 'the_excerpt_rss', array( $this, 'filter_feed' ) );
+		add_filter( 'rest_prepare_portfolio_project', array( $this, 'filter_rest_response' ), 10, 3 );
 	}
 
 	/**
@@ -191,15 +195,21 @@ final class Ross_Portfolio_Core {
 
 	/**
 	 * Sanitize allowed roles input and sync capabilities.
+	 * Validate inputs against valid system roles.
 	 *
 	 * @param mixed $input
 	 * @return array
 	 */
 	public function sanitize_allowed_roles( $input ) {
 		$sanitized = array();
+		$valid_roles = function_exists( 'wp_roles' ) ? array_keys( wp_roles()->get_names() ) : array();
+
 		if ( is_array( $input ) ) {
 			foreach ( $input as $role ) {
-				$sanitized[] = sanitize_key( $role );
+				$clean_role = sanitize_key( $role );
+				if ( empty( $valid_roles ) || in_array( $clean_role, $valid_roles, true ) ) {
+					$sanitized[] = $clean_role;
+				}
 			}
 		}
 
@@ -263,12 +273,15 @@ final class Ross_Portfolio_Core {
 	}
 
 	/**
-	 * Handle template redirect logic if needed.
+	 * Handle template redirect logic to prevent caching restricted content pages.
 	 */
 	public function handle_template_redirect() {
-		// Template redirect hook for single portfolio projects
 		if ( is_singular( 'portfolio_project' ) ) {
-			// Ensure response headers / caching directives if appropriate
+			if ( ! function_exists( 'ross_user_has_access' ) || ! ross_user_has_access() ) {
+				if ( function_exists( 'nocache_headers' ) ) {
+					nocache_headers();
+				}
+			}
 		}
 	}
 
@@ -288,6 +301,64 @@ final class Ross_Portfolio_Core {
 		}
 
 		return $this->render_restricted_notice();
+	}
+
+	/**
+	 * Filter post excerpt for restricted projects.
+	 *
+	 * @param string $excerpt
+	 * @return string
+	 */
+	public function filter_excerpt( $excerpt ) {
+		if ( is_singular( 'portfolio_project' ) ) {
+			if ( ! function_exists( 'ross_user_has_access' ) || ! ross_user_has_access() ) {
+				return esc_html__( 'Content restricted.', 'ross-portfolio' );
+			}
+		}
+		return $excerpt;
+	}
+
+	/**
+	 * Redact RSS feeds for portfolio projects.
+	 *
+	 * @param string $content
+	 * @return string
+	 */
+	public function filter_feed( $content ) {
+		if ( get_post_type() === 'portfolio_project' ) {
+			if ( ! function_exists( 'ross_user_has_access' ) || ! ross_user_has_access() ) {
+				return esc_html__( 'Content restricted.', 'ross-portfolio' );
+			}
+		}
+		return $content;
+	}
+
+	/**
+	 * Filter REST API response to sanitize / redact sensitive meta for unauthorized users.
+	 *
+	 * @param WP_REST_Response $response
+	 * @param WP_Post          $post
+	 * @param WP_REST_Request  $request
+	 * @return WP_REST_Response
+	 */
+	public function filter_rest_response( $response, $post, $request ) {
+		if ( ! function_exists( 'ross_user_has_access' ) || ! ross_user_has_access() ) {
+			$data = $response->get_data();
+			if ( isset( $data['content'] ) ) {
+				$data['content']['rendered'] = esc_html__( 'Content restricted.', 'ross-portfolio' );
+			}
+			if ( isset( $data['excerpt'] ) ) {
+				$data['excerpt']['rendered'] = esc_html__( 'Content restricted.', 'ross-portfolio' );
+			}
+			if ( isset( $data['meta'] ) ) {
+				$data['meta']['_ross_project_type']     = '';
+				$data['meta']['_ross_project_summary']  = '';
+				$data['meta']['_ross_project_solution'] = '';
+				$data['meta']['_ross_project_featured'] = false;
+			}
+			$response->set_data( $data );
+		}
+		return $response;
 	}
 
 	/**
