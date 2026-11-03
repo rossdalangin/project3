@@ -47,7 +47,7 @@ class Ross_Portfolio_Admin_Fields {
 	public function add_meta_boxes() {
 		add_meta_box(
 			'ross_portfolio_project_details',
-			__( 'Project Details', 'ross-portfolio' ),
+			__( 'Project Specification & Metadata', 'ross-portfolio' ),
 			array( $this, 'render_meta_box' ),
 			'portfolio_project',
 			'normal',
@@ -69,39 +69,94 @@ class Ross_Portfolio_Admin_Fields {
 		$project_featured = get_post_meta( $post->ID, '_ross_project_featured', true );
 		?>
 		<style>
-			.ross-meta-field {
-				margin-bottom: 15px;
+			.ross-meta-box-wrap {
+				padding: 8px 0;
 			}
-			.ross-meta-field label {
+			.ross-meta-field {
+				margin-bottom: 20px;
+			}
+			.ross-meta-field:last-child {
+				margin-bottom: 6px;
+			}
+			.ross-meta-field > label {
 				display: block;
 				font-weight: 600;
-				margin-bottom: 5px;
+				margin-bottom: 6px;
+				color: #1e293b;
+				font-size: 13px;
 			}
 			.ross-meta-field input[type="text"],
 			.ross-meta-field textarea {
 				width: 100%;
+				border: 1px solid #cbd5e1;
+				border-radius: 6px;
+				padding: 8px 12px;
+				font-size: 13px;
+				box-sizing: border-box;
+				transition: border-color 0.15s ease, box-shadow 0.15s ease;
+			}
+			.ross-meta-field input[type="text"]:focus,
+			.ross-meta-field textarea:focus {
+				border-color: #2563eb;
+				outline: none;
+				box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+			}
+			.ross-meta-field .description {
+				font-size: 12px;
+				color: #64748b;
+				margin-top: 4px;
+				margin-bottom: 0;
+			}
+			.ross-featured-toggle {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				border-radius: 8px;
+				padding: 12px 16px;
+				cursor: pointer;
+			}
+			.ross-featured-toggle input[type="checkbox"] {
+				margin: 0;
+				accent-color: #2563eb;
+				width: 18px;
+				height: 18px;
+			}
+			.ross-featured-toggle span {
+				font-weight: 600;
+				color: #1e293b;
+				font-size: 13px;
 			}
 		</style>
-		<div class="ross-meta-field">
-			<label for="ross_project_type"><?php echo esc_html__( 'Project Type:', 'ross-portfolio' ); ?></label>
-			<input type="text" id="ross_project_type" name="ross_project_type" value="<?php echo esc_attr( $project_type ); ?>" placeholder="e.g. Web Application, Mobile App, API Integration">
-		</div>
+		<div class="ross-meta-box-wrap">
+			<div class="ross-meta-field">
+				<label for="ross_project_type"><?php echo esc_html__( 'Project Type & Category', 'ross-portfolio' ); ?></label>
+				<input type="text" id="ross_project_type" name="ross_project_type" value="<?php echo esc_attr( $project_type ); ?>" placeholder="<?php esc_attr_e( 'e.g. Enterprise Web App, Mobile App, Microservice Architecture', 'ross-portfolio' ); ?>">
+				<p class="description"><?php esc_html_e( 'Specifies the architectural tier or business domain for this project.', 'ross-portfolio' ); ?></p>
+			</div>
 
-		<div class="ross-meta-field">
-			<label for="ross_project_summary"><?php echo esc_html__( 'Project Summary:', 'ross-portfolio' ); ?></label>
-			<textarea id="ross_project_summary" name="ross_project_summary" rows="3" placeholder="Brief summary of the project..."><?php echo esc_textarea( $project_summary ); ?></textarea>
-		</div>
+			<div class="ross-meta-field">
+				<label for="ross_project_summary"><?php echo esc_html__( 'Executive Summary', 'ross-portfolio' ); ?></label>
+				<textarea id="ross_project_summary" name="ross_project_summary" rows="3" placeholder="<?php esc_attr_e( 'High-level objective, background, and business impact...', 'ross-portfolio' ); ?>"><?php echo esc_textarea( $project_summary ); ?></textarea>
+				<p class="description"><?php esc_html_e( 'A concise summary displayed on project previews and REST endpoints.', 'ross-portfolio' ); ?></p>
+			</div>
 
-		<div class="ross-meta-field">
-			<label for="ross_project_solution"><?php echo esc_html__( 'Project Solution:', 'ross-portfolio' ); ?></label>
-			<textarea id="ross_project_solution" name="ross_project_solution" rows="5" placeholder="Detailed solution architecture and features..."><?php echo esc_textarea( $project_solution ); ?></textarea>
-		</div>
+			<div class="ross-meta-field">
+				<label for="ross_project_solution"><?php echo esc_html__( 'Technical Solution & Architecture', 'ross-portfolio' ); ?></label>
+				<textarea id="ross_project_solution" name="ross_project_solution" rows="5" placeholder="<?php esc_attr_e( 'Detailed technical breakdown, architectural patterns, and stack implementations...', 'ross-portfolio' ); ?>"><?php echo esc_textarea( $project_solution ); ?></textarea>
+				<p class="description"><?php esc_html_e( 'Comprehensive technical specification. Standard formatting HTML tags allowed.', 'ross-portfolio' ); ?></p>
+			</div>
 
-		<div class="ross-meta-field">
-			<label for="ross_project_featured">
-				<input type="checkbox" id="ross_project_featured" name="ross_project_featured" value="1" <?php checked( $project_featured, true ); ?>>
-				<?php echo esc_html__( 'Featured Project', 'ross-portfolio' ); ?>
-			</label>
+			<div class="ross-meta-field">
+				<label class="ross-featured-toggle" for="ross_project_featured">
+					<input type="checkbox" id="ross_project_featured" name="ross_project_featured" value="1" <?php checked( $project_featured, true ); ?>>
+					<div>
+						<span><?php echo esc_html__( 'Highlight as Featured Portfolio Showcase', 'ross-portfolio' ); ?></span>
+						<p class="description" style="margin: 2px 0 0 0;"><?php esc_html_e( 'Featured projects receive prominent visibility on portfolio archive grids.', 'ross-portfolio' ); ?></p>
+					</div>
+				</label>
+			</div>
 		</div>
 		<?php
 	}
