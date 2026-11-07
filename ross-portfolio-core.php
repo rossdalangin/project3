@@ -622,15 +622,55 @@ final class Ross_Portfolio_Core {
 				</div>
 
 				<div class="ross-docs-step">
-					<h3><span class="ross-docs-badge">3</span> <?php esc_html_e( 'Theme & Developer Integration', 'ross-portfolio' ); ?></h3>
-					<p><?php esc_html_e( 'You can query projects in custom page templates using standard WP_Query or using the provided public helper functions:', 'ross-portfolio' ); ?></p>
+					<h3><span class="ross-docs-badge">3</span> <?php esc_html_e( 'How to Display Portfolio Projects on a Page', 'ross-portfolio' ); ?></h3>
+					<p><?php esc_html_e( 'There are two primary methods to display your portfolio projects on your site:', 'ross-portfolio' ); ?></p>
+					<p><strong><?php esc_html_e( 'Method A: Automatic Archive Page', 'ross-portfolio' ); ?></strong><br>
+					<?php
+					$archive_url = get_post_type_archive_link( 'portfolio_project' );
+					if ( ! $archive_url ) {
+						$archive_url = home_url( '/portfolio_project/' );
+					}
+					/* translators: %s: archive URL */
+					printf( esc_html__( 'WordPress automatically registers a project archive at: %s', 'ross-portfolio' ), '<code><a href="' . esc_url( $archive_url ) . '" target="_blank">' . esc_url( $archive_url ) . '</a></code>' );
+					?>
+					</p>
+					<p><strong><?php esc_html_e( 'Method B: Custom Page Template (page-portfolio.php)', 'ross-portfolio' ); ?></strong><br>
+					<?php esc_html_e( 'To display the portfolio on any standard page, create a page template (e.g. page-portfolio.php) in your theme and run a WP_Query loop using the public accessor functions:', 'ross-portfolio' ); ?>
+					</p>
 					<pre class="ross-code-box">&lt;?php
-// Check if current user has permission to access:
-if ( ross_user_has_access() ) {
-    echo '&lt;h4&gt;' . esc_html( ross_get_project_type() ) . '&lt;/h4&gt;';
-    echo '&lt;p&gt;' . esc_html( ross_get_project_summary() ) . '&lt;/p&gt;';
-    echo '&lt;div&gt;' . wp_kses_post( ross_get_project_solution() ) . '&lt;/div&gt;';
-}
+/**
+ * Template Name: Portfolio Showcase Page
+ */
+get_header();
+
+$args = array(
+    'post_type'      => 'portfolio_project',
+    'posts_per_page' => 12,
+    'post_status'    => 'publish',
+);
+
+$projects = new WP_Query( $args );
+
+if ( $projects->have_posts() ) : ?&gt;
+    &lt;div class="portfolio-grid"&gt;
+        &lt;?php while ( $projects->have_posts() ) : $projects->the_post(); ?&gt;
+            &lt;article class="portfolio-card"&gt;
+                &lt;?php if ( has_post_thumbnail() ) : ?&gt;
+                    &lt;a href="&lt;?php the_permalink(); ?&gt;"&gt;&lt;?php the_post_thumbnail( 'medium_large' ); ?&gt;&lt;/a&gt;
+                &lt;?php endif; ?&gt;
+                &lt;h3&gt;&lt;a href="&lt;?php the_permalink(); ?&gt;"&gt;&lt;?php the_title(); ?&gt;&lt;/a&gt;&lt;/h3&gt;
+                &lt;span class="project-type"&gt;&lt;?php echo esc_html( ross_get_project_type() ); ?&gt;&lt;/span&gt;
+                &lt;p class="project-summary"&gt;&lt;?php echo esc_html( ross_get_project_summary() ); ?&gt;&lt;/p&gt;
+                &lt;?php if ( ross_is_project_featured() ) : ?&gt;
+                    &lt;span class="badge-featured"&gt;&lt;?php esc_html_e( 'Featured Project', 'ross-portfolio' ); ?&gt;&lt;/span&gt;
+                &lt;?php endif; ?&gt;
+                &lt;a class="button" href="&lt;?php the_permalink(); ?&gt;"&gt;&lt;?php esc_html_e( 'View Details', 'ross-portfolio' ); ?&gt;&lt;/a&gt;
+            &lt;/article&gt;
+        &lt;?php endwhile; wp_reset_postdata(); ?&gt;
+    &lt;/div&gt;
+&lt;?php endif;
+
+get_footer();
 ?&gt;</pre>
 				</div>
 
