@@ -274,6 +274,7 @@ final class Ross_Portfolio_Core {
 
 	/**
 	 * Sanitize allowed roles input and sync capabilities.
+	 * Validate inputs against valid system roles.
 	 *
 	 * @param mixed $input
 	 * @return array
@@ -381,7 +382,7 @@ final class Ross_Portfolio_Core {
 	}
 
 	/**
-	 * Render Modern Settings Page HTML.
+	 * Render Modern Settings Page HTML with In-Plugin User Instructions.
 	 */
 	public function render_settings_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -404,7 +405,7 @@ final class Ross_Portfolio_Core {
 
 			<style>
 				.ross-admin-wrap {
-					max-width: 900px;
+					max-width: 960px;
 					margin: 24px auto 30px 20px;
 				}
 				.ross-admin-header {
@@ -448,6 +449,7 @@ final class Ross_Portfolio_Core {
 					border-radius: 12px;
 					padding: 28px 32px;
 					box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+					margin-bottom: 28px;
 				}
 				.ross-roles-grid {
 					display: grid;
@@ -524,6 +526,68 @@ final class Ross_Portfolio_Core {
 				.ross-settings-container h2:first-of-type {
 					margin-top: 0;
 				}
+				.ross-docs-container {
+					background: #ffffff;
+					border: 1px solid #e2e8f0;
+					border-radius: 12px;
+					padding: 28px 32px;
+					box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+				}
+				.ross-docs-header {
+					display: flex;
+					align-items: center;
+					gap: 10px;
+					border-bottom: 1px solid #f1f5f9;
+					padding-bottom: 12px;
+					margin-bottom: 20px;
+				}
+				.ross-docs-header h2 {
+					margin: 0;
+					font-size: 18px;
+					font-weight: 700;
+					color: #0f172a;
+				}
+				.ross-docs-step {
+					margin-bottom: 24px;
+				}
+				.ross-docs-step h3 {
+					font-size: 15px;
+					font-weight: 600;
+					color: #1e293b;
+					margin: 0 0 8px 0;
+					display: flex;
+					align-items: center;
+					gap: 8px;
+				}
+				.ross-docs-step p {
+					margin: 0 0 10px 0;
+					color: #475569;
+					font-size: 13.5px;
+					line-height: 1.6;
+				}
+				.ross-docs-badge {
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+					width: 22px;
+					height: 22px;
+					border-radius: 50%;
+					background: #2563eb;
+					color: #ffffff;
+					font-size: 12px;
+					font-weight: 700;
+				}
+				.ross-code-box {
+					background: #0f172a;
+					color: #e2e8f0;
+					padding: 14px 18px;
+					border-radius: 8px;
+					font-family: Consolas, Monaco, monospace;
+					font-size: 12.5px;
+					overflow-x: auto;
+					line-height: 1.6;
+					margin-top: 8px;
+				}
 			</style>
 
 			<div class="ross-settings-container">
@@ -534,6 +598,46 @@ final class Ross_Portfolio_Core {
 					submit_button( __( 'Save Access Settings', 'ross-portfolio' ), 'primary large' );
 					?>
 				</form>
+			</div>
+
+			<div class="ross-docs-container">
+				<div class="ross-docs-header">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+						<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+					</svg>
+					<h2><?php esc_html_e( 'How to Use This Plugin', 'ross-portfolio' ); ?></h2>
+				</div>
+
+				<div class="ross-docs-step">
+					<h3><span class="ross-docs-badge">1</span> <?php esc_html_e( 'Creating & Managing Portfolio Projects', 'ross-portfolio' ); ?></h3>
+					<p><?php esc_html_e( 'Navigate to Portfolio > Add New to create a project. Enter title, description, cover image, and assign categories/technologies.', 'ross-portfolio' ); ?></p>
+					<p><?php esc_html_e( 'Use the Project Specification & Metadata meta box below the editor to configure project type, executive summary, technical solution breakdown, and featured showcase status.', 'ross-portfolio' ); ?></p>
+				</div>
+
+				<div class="ross-docs-step">
+					<h3><span class="ross-docs-badge">2</span> <?php esc_html_e( 'Managing Access & Memberships', 'ross-portfolio' ); ?></h3>
+					<p><?php esc_html_e( 'Single portfolio project pages are automatically protected. Only users logged in with roles that hold the read_private_portfolio capability can view project details.', 'ross-portfolio' ); ?></p>
+					<p><?php esc_html_e( 'To grant or revoke access for roles (e.g. Subscriber, Customer, VIP Member), simply toggle their checkbox in the Role Access Permissions section above and click "Save Access Settings".', 'ross-portfolio' ); ?></p>
+				</div>
+
+				<div class="ross-docs-step">
+					<h3><span class="ross-docs-badge">3</span> <?php esc_html_e( 'Theme & Developer Integration', 'ross-portfolio' ); ?></h3>
+					<p><?php esc_html_e( 'You can query projects in custom page templates using standard WP_Query or using the provided public helper functions:', 'ross-portfolio' ); ?></p>
+					<pre class="ross-code-box">&lt;?php
+// Check if current user has permission to access:
+if ( ross_user_has_access() ) {
+    echo '&lt;h4&gt;' . esc_html( ross_get_project_type() ) . '&lt;/h4&gt;';
+    echo '&lt;p&gt;' . esc_html( ross_get_project_summary() ) . '&lt;/p&gt;';
+    echo '&lt;div&gt;' . wp_kses_post( ross_get_project_solution() ) . '&lt;/div&gt;';
+}
+?&gt;</pre>
+				</div>
+
+				<div class="ross-docs-step">
+					<h3><span class="ross-docs-badge">4</span> <?php esc_html_e( 'REST API Access', 'ross-portfolio' ); ?></h3>
+					<p><?php esc_html_e( 'Projects are available via the WordPress REST API endpoint at /wp-json/wp/v2/portfolio_projects. Unauthorized requests automatically receive redacted content, excerpts, and metadata.', 'ross-portfolio' ); ?></p>
+				</div>
 			</div>
 		</div>
 		<?php
