@@ -50,14 +50,19 @@ function plugin_dir_path( $file ) { return dirname(__DIR__) . '/'; }
 function plugin_dir_url( $file ) { return 'http://localhost/wp-content/plugins/ross-portfolio/'; }
 function add_action( $hook, $cb, $priority = 10, $accepted_args = 1 ) {}
 function add_filter( $hook, $cb, $priority = 10, $accepted_args = 1 ) {}
+function apply_filters( $tag, $value ) { return $value; }
 function register_activation_hook( $file, $cb ) {}
 function register_deactivation_hook( $file, $cb ) {}
 function __( $str, $domain = '' ) { return $str; }
 function _x( $str, $ctx, $domain = '' ) { return $str; }
 function esc_html__( $str, $domain = '' ) { return $str; }
+function esc_html_e( $str, $domain = '' ) { echo htmlspecialchars( $str, ENT_QUOTES ); }
 function esc_html( $str ) { return htmlspecialchars( $str, ENT_QUOTES ); }
+function esc_attr__( $str, $domain = '' ) { return $str; }
+function esc_attr_e( $str, $domain = '' ) { echo htmlspecialchars( $str, ENT_QUOTES ); }
 function esc_attr( $str ) { return htmlspecialchars( $str, ENT_QUOTES ); }
 function esc_textarea( $str ) { return htmlspecialchars( $str, ENT_QUOTES ); }
+function esc_url( $url ) { return $url; }
 function sanitize_text_field( $str ) { return trim( strip_tags( $str ) ); }
 function sanitize_textarea_field( $str ) { return trim( strip_tags( $str ) ); }
 function sanitize_key( $key ) { return strtolower( preg_replace( '/[^a-z0-9_\-]/i', '', $key ) ); }
@@ -99,6 +104,11 @@ function wp_roles() { global $wp_roles; return $wp_roles; }
 function get_role( $role ) { global $mock_roles_objs; return isset($mock_roles_objs[$role]) ? $mock_roles_objs[$role] : null; }
 function translate_user_role( $name ) { return $name; }
 function flush_rewrite_rules() {}
+function get_the_term_list( $id, $tax, $before = '', $sep = '', $after = '' ) { return 'React, Node.js'; }
+function is_wp_error( $thing ) { return false; }
+function is_singular( $post_type ) { return 'portfolio_project' === $post_type; }
+function in_the_loop() { return true; }
+function is_main_query() { return true; }
 
 // Include core plugin and helpers
 require_once dirname(__DIR__) . '/ross-portfolio-core.php';
@@ -148,5 +158,16 @@ $core->sanitize_allowed_roles( array( 'subscriber', 'editor' ) );
 // Now subscriber should have access
 assert( ross_user_has_access(1) === true );
 echo "Test 3 Passed: Role capability synchronization updates permissions correctly.\n";
+
+// Test 4: Content filtering with automatic project details rendering for authorized users
+$mock_current_user_id = 2; // Editor
+$initial_content = "<p>Standard project description</p>";
+$filtered_content = $core->filter_content( $initial_content );
+
+assert( strpos( $filtered_content, 'ross-project-specs-card' ) !== false );
+assert( strpos( $filtered_content, 'Fullstack SaaS' ) !== false );
+assert( strpos( $filtered_content, 'A web app for metrics.' ) !== false );
+assert( strpos( $filtered_content, 'Built with PHP' ) !== false );
+echo "Test 4 Passed: Automatic project specifications and details rendering works.\n";
 
 echo "ALL TESTS PASSED SUCCESSFULLY!\n";

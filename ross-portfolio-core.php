@@ -697,7 +697,7 @@ get_footer();
 	}
 
 	/**
-	 * Filter the_content to restrict access for portfolio_project CPT.
+	 * Filter the_content to restrict access or append project details for portfolio_project CPT.
 	 *
 	 * @param string $content
 	 * @return string
@@ -708,10 +708,157 @@ get_footer();
 		}
 
 		if ( function_exists( 'ross_user_has_access' ) && ross_user_has_access() ) {
+			/**
+			 * Filter whether to automatically append formatted project details to the post content.
+			 *
+			 * @param bool $display Default true.
+			 */
+			if ( apply_filters( 'ross_portfolio_display_details', true ) ) {
+				$content .= $this->render_project_details();
+			}
 			return $content;
 		}
 
 		return $this->render_restricted_notice();
+	}
+
+	/**
+	 * Render Formatted Project Details Box.
+	 *
+	 * @return string
+	 */
+	private function render_project_details() {
+		$post_id  = get_the_ID();
+		$type     = function_exists( 'ross_get_project_type' ) ? ross_get_project_type( $post_id ) : '';
+		$summary  = function_exists( 'ross_get_project_summary' ) ? ross_get_project_summary( $post_id ) : '';
+		$solution = function_exists( 'ross_get_project_solution' ) ? ross_get_project_solution( $post_id ) : '';
+		$featured = function_exists( 'ross_is_project_featured' ) ? ross_is_project_featured( $post_id ) : false;
+
+		// Fetch Taxonomies
+		$categories = get_the_term_list( $post_id, 'project_category', '', ', ' );
+		$techs      = get_the_term_list( $post_id, 'project_tech', '', ', ' );
+
+		// Only render if at least one meta field or taxonomy exists
+		if ( empty( $type ) && empty( $summary ) && empty( $solution ) && ! $featured && empty( $categories ) && empty( $techs ) ) {
+			return '';
+		}
+
+		ob_start();
+		?>
+		<style>
+			.ross-project-specs-card {
+				margin: 32px 0 24px 0;
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				border-radius: 12px;
+				padding: 24px;
+				font-family: inherit;
+				box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+			}
+			.ross-specs-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				flex-wrap: wrap;
+				gap: 12px;
+				border-bottom: 1px solid #e2e8f0;
+				padding-bottom: 16px;
+				margin-bottom: 20px;
+			}
+			.ross-specs-title {
+				margin: 0;
+				font-size: 1.25rem;
+				font-weight: 700;
+				color: #0f172a;
+			}
+			.ross-specs-badge {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				padding: 4px 10px;
+				background: #dbeafe;
+				color: #1e40af;
+				font-size: 0.75rem;
+				font-weight: 600;
+				text-transform: uppercase;
+				border-radius: 6px;
+			}
+			.ross-specs-grid {
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 16px;
+			}
+			.ross-spec-item {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+			}
+			.ross-spec-label {
+				font-size: 0.8125rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.04em;
+				color: #64748b;
+			}
+			.ross-spec-value {
+				font-size: 0.95rem;
+				color: #1e293b;
+				line-height: 1.6;
+			}
+			.ross-spec-value p {
+				margin-top: 0;
+			}
+		</style>
+		<div class="ross-project-specs-card" aria-label="<?php echo esc_attr__( 'Project Specifications', 'ross-portfolio' ); ?>">
+			<div class="ross-specs-header">
+				<h3 class="ross-specs-title"><?php esc_html_e( 'Project Specifications & Details', 'ross-portfolio' ); ?></h3>
+				<?php if ( $featured ) : ?>
+					<span class="ross-specs-badge">
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+						<?php esc_html_e( 'Featured Project', 'ross-portfolio' ); ?>
+					</span>
+				<?php endif; ?>
+			</div>
+
+			<div class="ross-specs-grid">
+				<?php if ( ! empty( $type ) ) : ?>
+					<div class="ross-spec-item">
+						<span class="ross-spec-label"><?php esc_html_e( 'Project Type', 'ross-portfolio' ); ?></span>
+						<span class="ross-spec-value"><strong><?php echo esc_html( $type ); ?></strong></span>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $categories ) && ! is_wp_error( $categories ) ) : ?>
+					<div class="ross-spec-item">
+						<span class="ross-spec-label"><?php esc_html_e( 'Categories', 'ross-portfolio' ); ?></span>
+						<span class="ross-spec-value"><?php echo wp_kses_post( $categories ); ?></span>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $techs ) && ! is_wp_error( $techs ) ) : ?>
+					<div class="ross-spec-item">
+						<span class="ross-spec-label"><?php esc_html_e( 'Technologies Used', 'ross-portfolio' ); ?></span>
+						<span class="ross-spec-value"><?php echo wp_kses_post( $techs ); ?></span>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $summary ) ) : ?>
+					<div class="ross-spec-item">
+						<span class="ross-spec-label"><?php esc_html_e( 'Summary', 'ross-portfolio' ); ?></span>
+						<div class="ross-spec-value"><?php echo nl2br( esc_html( $summary ) ); ?></div>
+					</div>
+				<?php endif; ?>
+
+				<?php if ( ! empty( $solution ) ) : ?>
+					<div class="ross-spec-item">
+						<span class="ross-spec-label"><?php esc_html_e( 'Technical Solution & Architecture', 'ross-portfolio' ); ?></span>
+						<div class="ross-spec-value"><?php echo wp_kses_post( $solution ); ?></div>
+					</div>
+				<?php endif; ?>
+			</div>
+		</div>
+		<?php
+		return ob_get_clean();
 	}
 
 	/**
